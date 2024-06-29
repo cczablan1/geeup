@@ -59,7 +59,8 @@ class CustomErrorHandler(BasicErrorHandler):
 
 
 def task_counter():
-    ee.Initialize()
+    ee.Initialize(project='msi-marine-heatwaves')
+    
     status = ["RUNNING", "PENDING"]
     task_count = len(
         [
@@ -87,7 +88,7 @@ def upload(
     if v.validate(collection_validate, schema) is False:
         sys.exit(v.errors)
 
-    ee.Initialize()
+    ee.Initialize(project='msi-marine-heatwaves')
 
     logging.basicConfig(
         format="%(asctime)s %(levelname)-4s %(message)s",
@@ -311,7 +312,9 @@ def cookie_check(cookie_list):
 
 
 def __get_google_auth_session(username):
-    ee.Initialize()
+
+    ee.Initialize(project='msi-marine-heatwaves')
+
     platform_info = platform.system().lower()
     if str(platform_info) == "linux" or str(platform_info) == "darwin":
         subprocess.check_call(["stty", "-icanon"])

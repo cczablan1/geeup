@@ -28,7 +28,7 @@ import subprocess
 import sys
 import time
 import webbrowser
-from datetime import datetime
+from datetime import datetime, timezone
 from zipfile import ZipFile
 
 import ee
@@ -43,7 +43,8 @@ lpath = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(lpath)
 
 if len(sys.argv) > 1 and sys.argv[1] != "-h":
-    ee.Initialize()
+    
+    ee.Initialize(project='msi-marine-heatwaves')
 
 # Set a custom log formatter
 logging.basicConfig(
@@ -356,7 +357,7 @@ def getmeta(indir, mfile):
         flength = len(tif_files)
 
         with open(mfile, "w", newline="") as csvfile:
-            fieldnames = ["id_no", "xsize", "ysize", "num_bands"]
+            fieldnames = ["id_no", "xsize", "ysize", "num_bands", "system:time_start"]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
@@ -370,9 +371,21 @@ def getmeta(indir, mfile):
                 ysize = gtif.RasterYSize
                 bsize = gtif.RasterCount
 
+                # Split the fname to extract the date part
+                date_str = fname.split("_")[-1]
+
+                # Convert the date string to a datetime object
+                date = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+
+                # Get the epoch in seconds
+                epoch_time = date.timestamp()
+
+                # Convert epoch to milliseconds and print the result
+                timestart = int(epoch_time * 1000)
+
                 with open(mfile, "a", newline="") as csvfile:
                     writer = csv.writer(csvfile)
-                    writer.writerow([fname, xsize, ysize, bsize])
+                    writer.writerow([fname, xsize, ysize, bsize, timestart])
 
                 i += 1
             except Exception as e:
@@ -557,6 +570,7 @@ def cancel_tasks(tasks):
 
 def delete(ids):
     try:
+        ee.Initialize(project='msi-marine-heatwaves')
         logging.info("Recursively deleting path: {}".format(ids))
         process_output = subprocess.run(
             ["earthengine", "rm", "-r", "{}".format(ids)],

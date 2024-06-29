@@ -126,7 +126,9 @@ def get_auth_session(uname):
 
 
 def tabup(dirc, uname, destination, x, y, overwrite=None):
-    ee.Initialize()
+    
+    ee.Initialize(project='msi-marine-heatwaves')
+    
     schema = {"folder_path": {"type": "string", "regex": "^[a-zA-Z0-9/_-]+$"}}
     folder_validate = {"folder_path": destination}
     v = Validator(schema, error_handler=CustomErrorHandler(schema))
