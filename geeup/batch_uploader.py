@@ -311,60 +311,59 @@ def cookie_check(cookie_list):
         return False
 
 
-def __get_google_auth_session(username):
+def is_interactive():
+    return os.isatty(sys.stdin.fileno())
 
+def __get_google_auth_session(username):
     ee.Initialize(project='msi-marine-heatwaves')
 
     platform_info = platform.system().lower()
-    if str(platform_info) == "linux" or str(platform_info) == "darwin":
+    if is_interactive() and (platform_info == "linux" or platform_info == "darwin"):
         subprocess.check_call(["stty", "-icanon"])
+
     if not os.path.exists("cookie_jar.json"):
         try:
-            cookie_list = raw_input("Enter your Cookie List:  ")
+            cookie_list = input("Enter your Cookie List:  ")
         except Exception:
             cookie_list = input("Enter your Cookie List:  ")
         finally:
             with open("cookie_jar.json", "w") as outfile:
                 json.dump(json.loads(cookie_list), outfile)
         cookie_list = json.loads(cookie_list)
-    elif os.path.exists("cookie_jar.json"):
+    else:
         with open("cookie_jar.json") as json_file:
             cookie_list = json.load(json_file)
-        if cookie_check(cookie_list) is True:
+        if cookie_check(cookie_list):
             print("Using saved Cookies")
-            cookie_list = cookie_list
-        elif cookie_check(cookie_list) is False:
+        else:
             try:
-                cookie_list = raw_input("Cookies Expired | Enter your Cookie List:  ")
+                cookie_list = input("Cookies Expired | Enter your Cookie List:  ")
             except Exception:
                 cookie_list = input("Cookies Expired | Enter your Cookie List:  ")
             finally:
                 with open("cookie_jar.json", "w") as outfile:
                     json.dump(json.loads(cookie_list), outfile)
                     cookie_list = json.loads(cookie_list)
+
     time.sleep(5)
-    if str(platform.system().lower()) == "windows":
+
+    if is_interactive() and (platform_info == "linux" or platform_info == "darwin"):
+        os.system("clear")
+        subprocess.check_call(["stty", "icanon"])
+    elif platform_info == "windows":
         os.system("cls")
-    elif str(platform.system().lower()) == "linux":
-        os.system("clear")
-        subprocess.check_call(["stty", "icanon"])
-    elif str(platform.system().lower()) == "darwin":
-        os.system("clear")
-        subprocess.check_call(["stty", "icanon"])
     else:
-        sys.exit(f"Operating system is not supported")
+        sys.exit("Operating system is not supported")
+
     session = requests.Session()
     for cookies in cookie_list:
         session.cookies.set(cookies["name"], cookies["value"])
+    
     response = session.get("https://code.earthengine.google.com/assets/upload/geturl")
-    if (
-        response.status_code == 200
-        and ast.literal_eval(response.text)["url"] is not None
-    ):
+    if response.status_code == 200 and json.loads(response.text)["url"] is not None:
         return session
     else:
         print(response.status_code, response.text)
-
 
 def __get_upload_url(session):
     r = session.get("https://code.earthengine.google.com/assets/upload/geturl")
