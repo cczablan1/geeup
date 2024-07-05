@@ -352,9 +352,7 @@ def __get_google_auth_session(username):
         subprocess.check_call(["stty", "icanon"])
     elif platform_info == "windows":
         os.system("cls")
-    else:
-        sys.exit("Operating system is not supported")
-
+    
     session = requests.Session()
     for cookies in cookie_list:
         session.cookies.set(cookies["name"], cookies["value"])
