@@ -582,10 +582,10 @@ def getmeta(indir: str, mfile: str):
                     band = safe(lambda: ds.GetRasterBand(1))
 
                     # Get the filename
-                    fname = os.path.splitext(os.path.basename(tif_file))[0]
+                    fname = tif_file.stem
 
                     # Split the fname to extract the date part
-                    date_str = tif_file.split("_")[-1]
+                    date_str = fname.split("_")[-1]
 
                     # Convert the date string to a datetime object
                     date = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
